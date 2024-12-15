@@ -36,3 +36,32 @@ class GeneradorPDF:
         # Abrir el PDF después de guardarlo
         os.startfile(self.nombre_archivo)
         print(f"PDF generado y guardado como: {self.nombre_archivo}")
+    
+    def agregar_servicios(self, servicios):
+        """
+        Agrega una sección con los servicios al PDF.
+
+        servicios: lista de tuplas con los datos del servicio (servicio, descripcion, telefono).
+        """
+        self.pdf.add_page()
+
+        # Encabezado para la sección de servicios
+        self.pdf.set_font("Arial", style='B', size=16)
+        self.pdf.cell(200, 10, txt="Servicios", ln=True, align='C')
+        self.pdf.ln(10)  # Espacio
+
+        # Listar servicios
+        self.pdf.set_font("Arial", size=12)
+        for servicio in servicios:
+            self.pdf.cell(0, 10, txt=f"Servicio: {servicio[1]}", ln=True)
+            self.pdf.cell(0, 10, txt=f"Descripción: {servicio[2]}", ln=True)
+            self.pdf.cell(0, 10, txt=f"Teléfono: {servicio[3]}", ln=True)
+            # Separador entre servicios
+            self.pdf.ln(10)
+            self.pdf.cell(0, 10, txt="--------------------------------", ln=True)
+        
+        # Guardar el PDF
+        self.pdf.output(self.nombre_archivo)
+        # Abrir el PDF después de guardarlo
+        os.startfile(self.nombre_archivo)
+        print(f"PDF generado y guardado como: {self.nombre_archivo}")

@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QPushButton,
-    QVBoxLayout, QHBoxLayout, QFrame, QLineEdit, QTableWidget, QScrollArea, QTableWidgetItem, QMessageBox)
+    QVBoxLayout, QHBoxLayout, QFrame, QLineEdit, QTableWidget, QScrollArea, QTableWidgetItem, QMessageBox, QHeaderView)
 from PySide6.QtGui import QFont, QColor, QPixmap
 from PySide6.QtCore import Qt
 from basededatos import BaseDeDatos as bd
@@ -12,7 +12,7 @@ class Recepcion(QWidget):
         self.db = db
         
         self.setWindowTitle("Inicio")
-        self.resize(800, 300)
+        self.resize(900, 400)
         self.setStyleSheet("background-color: white;")
         self.setWindowIcon(QPixmap("UsuarioIcon.png"))
         
@@ -37,6 +37,11 @@ class Recepcion(QWidget):
         botonPagos.setStyleSheet("background-color: #FF7E67; color: white;")
         botonPagos.clicked.connect(self.ventanaPagos)
         diseño_izquierdo.addWidget(botonPagos)
+
+        botonEventosPagados = QPushButton("Eventos Pagados")
+        botonEventosPagados.setStyleSheet("background-color: #FF7E67; color: white;")
+        botonEventosPagados.clicked.connect(self.ventana_eventos_pagados)
+        diseño_izquierdo.addWidget(botonEventosPagados)
 
         # Diseño del lado derecho
         self.diseño_derecho = QVBoxLayout()
@@ -65,22 +70,20 @@ class Recepcion(QWidget):
         
     def ventanaEventos(self):
         # Limpiar el diseño lateral derecho
-        for i in reversed(range(self.diseño_derecho.count())):
-            widget_to_remove = self.diseño_derecho.itemAt(i).widget()
-            if widget_to_remove is not None:
-                widget_to_remove.setParent(None)
+        self.limpiar()
         
         # Añadir nuevo contenido para la interfaz de eventos
         buscarProovedor = QLineEdit()
         buscarProovedor.setPlaceholderText("Datos del proveedor aquí")
         
         mostrarProovedor = QTableWidget()
-        mostrarProovedor.setColumnCount(4)
+        mostrarProovedor.setColumnCount(6)
         mostrarProovedor.verticalHeader().setVisible(False)
         mostrarProovedor.setEditTriggers(QTableWidget.NoEditTriggers)
         mostrarProovedor.setSelectionBehavior(QTableWidget.SelectRows)
-        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Cliente", "Telefono", "Salon"])
+        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Total", "Anticipo"])
         mostrarProovedor.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+        mostrarProovedor.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         area_desplazamiento = QScrollArea()
         area_desplazamiento.setWidgetResizable(True)
@@ -88,7 +91,7 @@ class Recepcion(QWidget):
         self.diseño_derecho.addWidget(area_desplazamiento)
         
         # Insersión de los eventos en la tabla obtenidos de la base de datos
-        eventos = self.db.consultar_eventos()
+        eventos = self.db.consultar_eventos_no_pagados()
         
         if eventos:
             mostrarProovedor.setRowCount(len(eventos))
@@ -100,24 +103,28 @@ class Recepcion(QWidget):
                     item.setForeground(QColor(0, 0, 0))
                     item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                     mostrarProovedor.setItem(i, j, item)
-            mostrarProovedor.itemClicked.connect(self.itemClicado)
+            mostrarProovedor.itemClicked.connect(self.eventoClicado)
                     
         else:
             mostrarProovedor.setRowCount(1)
             mostrarProovedor.setItem(0, 0, QTableWidgetItem("No hay eventos"))
             mostrarProovedor.setColumnCount(1)
     
-    def itemClicado(self, item):
+    def eventoClicado(self, item):
         row = item.row()
         idRenglon = item.tableWidget().item(row, 0).text()
         
         # Obtener información del evento seleccionado
         evento = self.db.consultar_evento_detallado(idRenglon)
-        mensaje = QMessageBox(self, windowTitle="Información del evento", text=f"""Numero: {evento[0]}\n Fecha: {evento[1]}\nCliente: {evento[2]} {evento[3]} {evento[4]}\nTeléfono: {evento[5]}\nSalón: {evento[6]},\n\nInformación adicional: {evento[7]}""")
-        imprimir = mensaje.addButton("Imprimir", QMessageBox.AcceptRole)
-        imprimir.clicked.connect(lambda: self.imprimir(evento))        
-        mensaje.exec()
+        mensaje = QMessageBox(self)
+        mensaje.setWindowTitle("Información del evento")
+        mensaje.setText(f"""Numero: {evento[0]}\n Fecha: {evento[1]}\nCliente: {evento[2]} {evento[3]} {evento[4]}\nTeléfono: {evento[5]}\nSalón: {evento[6]},\n\nInformación adicional: {evento[7]}""")
+        cerrar = mensaje.addButton("Cerrar", QMessageBox.RejectRole)
+        imprimirbt = mensaje.addButton("Imprimir", QMessageBox.AcceptRole)
+        imprimirbt.clicked.connect(lambda: self.imprimir(evento))
         
+        mensaje.exec_()
+    
     def imprimir(self, evento):
         # Imprime un PDF con la información del evento seleccionado
         self.pdf = pdf(f"{evento[2]} {evento[3]} {evento[4]}.pdf")
@@ -125,10 +132,7 @@ class Recepcion(QWidget):
     
     def ventanaPagos(self):
         # Limpiar el diseño lateral derecho
-        for i in reversed(range(self.diseño_derecho.count())):
-            widget = self.diseño_derecho.itemAt(i).widget()
-            if widget is not None:
-                widget.setParent(None)
+        self.limpiar()
                 
         # Añadir nuevo contenido para la interfaz de pagos
         botonPagar = QPushButton("Pagar")
@@ -137,11 +141,94 @@ class Recepcion(QWidget):
         
         # Interfaz de pagos
         tablaPagos = QTableWidget()
-        tablaPagos.setColumnCount(4)
+        tablaPagos.setColumnCount(7)
         tablaPagos.setEditTriggers(QTableWidget.NoEditTriggers)
         tablaPagos.setSelectionBehavior(QTableWidget.SelectRows)
-        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Monto", "Estado"])
+        tablaPagos.verticalHeader().setVisible(False)
+        tablaPagos.setHorizontalHeaderLabels(["No.", "No. Evento", "P.I", "Fecha", "Fecha", "Estado", "Cliente"])
+        tablaPagos.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         self.diseño_derecho.addWidget(tablaPagos)
+
+        # Insersión de los pagos en la tabla obtenidos de la base de datos
+        pagos = self.db.consultar_Pagos()
+        if pagos:
+            tablaPagos.setRowCount(len(pagos))
+            for i, pago in enumerate(pagos):
+                nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
+                for j, campo in enumerate(pago):
+                    item = QTableWidgetItem(str(campo))
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setBackground(QColor(255, 255, 255))
+                    item.setForeground(QColor(0, 0, 0))
+                    item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    tablaPagos.setItem(i, j, item)
+                nombreCliente = f"{nombreCliente[0]} {nombreCliente[1]} {nombreCliente[2]}"
+                tablaPagos.setItem(i, 6, QTableWidgetItem(nombreCliente))
+            tablaPagos.itemClicked.connect(self.pagoClicado)
+        tablaPagos.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+    def pagoClicado(self, item):
+        row = item.row()
+        idRenglon = item.tableWidget().item(row, 0).text()
+        
+        # Obtener información del pago seleccionado y la opción de finalizar el pago en caso de estar pendiente
+        pago = self.db.consultar_Pago(idRenglon)
+        self.mensaje = QMessageBox(self)
+        self.mensaje.setWindowTitle("Información del pago")
+        self.mensaje.setText(f"""Numero: {pago[0]}\nNo. Evento: {pago[1]}\nMonto: {pago[2]}\nFecha Inicial: {pago[3]}\nPago Inicial: {pago[4]}\n Estado: {"Inpago" if pago[5] == None else "Pagado"}""")
+        
+        finalizar = None
+        if pago[5] == None:
+            finalizar = self.mensaje.addButton("Finalizar", QMessageBox.AcceptRole)
+        
+        cerrar = self.mensaje.addButton("Cerrar", QMessageBox.RejectRole)
+        
+        self.mensaje.exec_()
+        
+        if self.mensaje.clickedButton() == finalizar:
+            self.finalizar_pago(pago)
+
+    def finalizar_pago(self, pago):
+        # Finaliza el pago seleccionado
+        self.db.finalizar_Pago(pago[0])
+    
+    def ventana_eventos_pagados(self):
+        # Limpiar el diseño lateral derecho
+        self.limpiar()
+        
+        # Añadir nuevo contenido para la interfaz de eventos pagados
+        tablaPagos = QTableWidget()
+        tablaPagos.setColumnCount(6)
+        tablaPagos.setEditTriggers(QTableWidget.NoEditTriggers)
+        tablaPagos.setSelectionBehavior(QTableWidget.SelectRows)
+        tablaPagos.verticalHeader().setVisible(False)
+        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Monto", "Fecha saldada"])
+        tablaPagos.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
+        self.diseño_derecho.addWidget(tablaPagos)
+
+        # Insersión de los pagos en la tabla obtenidos de la base de datos
+        pagos = self.db.consultar_eventos_pagados()
+        if pagos:
+            tablaPagos.setRowCount(len(pagos))
+            for i, pago in enumerate(pagos):
+                nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
+                for j, campo in enumerate(pago):
+                    item = QTableWidgetItem(str(campo))
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setBackground(QColor(255, 255, 255))
+                    item.setForeground(QColor(0, 0, 0))
+                    item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    tablaPagos.setItem(i, j, item)
+            tablaPagos.itemClicked.connect(self.eventoClicado)
+        tablaPagos.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+    def limpiar(self):
+        # Limpiar el diseño lateral derecho
+        for i in reversed(range(self.diseño_derecho.count())):
+            widget = self.diseño_derecho.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+            
         
 
 if __name__ == "__main__":

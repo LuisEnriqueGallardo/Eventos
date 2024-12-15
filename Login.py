@@ -71,16 +71,17 @@ class LoginWindow(QMainWindow):
         try:
             db = bd()
             id, rol = db.autenticar_usuario(user, password)
+            print(id, rol)
             if id and rol:
-                if rol == "recepcion":
+                if rol == "Recepcionista":
                     db.reconectar("recepcion", "recepcionpwd")
                     nombre = db.consultar_empleado(id)
                     self.window = Recepcion(nombre, db)
-                elif rol == "organizador":
+                elif rol == "Organizador":
                     db.reconectar("organizador", "organizadorpwd")
                     nombre = db.consultar_empleado(id)
                     self.window = VentanaPrincipal(nombre, db)
-                elif rol == "admin":
+                elif rol == "Gerente":
                     db.reconectar("administrador", "administradorpwd")
                     nombre = db.consultar_empleado(id)
                     self.window = VentanaAdmin(nombre, db)
