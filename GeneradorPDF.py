@@ -55,6 +55,11 @@ class GeneradorPDF:
         self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
         self.pdf.ln(10)
 
+              # Texto grande "PAGADO"
+        self.pdf.set_font("Arial", style="B", size=50)
+        self.pdf.set_text_color(255, 0, 0)
+        self.pdf.cell(0, 10, txt="PENDIENTE", ln=True, align="C")
+
         # Pie de página
         self.pdf.set_y(-30)
         self.pdf.set_font("Arial", size=10)
@@ -108,6 +113,70 @@ class GeneradorPDF:
         self.pdf.ln(10)
         self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
         self.pdf.ln(10)
+
+        # Pie de página
+        self.pdf.set_y(-30)
+        self.pdf.set_font("Arial", size=10)
+        self.pdf.cell(0, 10, txt="Gracias por confiar en Eventify.", ln=True, align="C")
+        self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
+
+        # Guardar el PDF
+        self.pdf.output(self.nombre_archivo)
+        os.startfile(self.nombre_archivo)
+        print(f"PDF generado y guardado como: {self.nombre_archivo}")
+
+    def agregar_evento_pagado(self, evento):
+        """
+        Agrega la información del evento pagado al PDF.
+        Args:
+            evento (tuple): Información del evento en el siguiente orden:
+                            No., fecha, descripcion, nombre_completo, total, anticipo, servicio
+        """
+        self.pdf.add_page()
+
+        # Encabezado
+        self.pdf.set_font("Arial", style="B", size=24)
+        self.pdf.cell(0, 10, txt="Eventify", ln=True, align="C")
+        self.pdf.set_font("Arial", size=12)
+        self.pdf.cell(0, 10, txt="Transformando momentos en recuerdos inolvidables.", ln=True, align="C")
+        self.pdf.ln(20)  # Espacio
+
+        # Línea separadora
+        self.pdf.set_draw_color(0, 0, 0)
+        self.pdf.set_line_width(0.5)
+        self.pdf.line(10, 40, 200, 40)
+        self.pdf.ln(10)  # Espacio
+
+        # Datos del evento pagado
+        self.pdf.set_font("Arial", style="B", size=14)
+        self.pdf.cell(0, 10, txt="Detalles del Evento Pagado", ln=True, align="L")
+        self.pdf.ln(5)
+
+        self.pdf.set_font("Arial", size=12)
+        self.pdf.cell(50, 10, txt="ID del Evento:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[0]}", ln=True)
+        self.pdf.cell(50, 10, txt="Fecha:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[1]}", ln=True)
+        self.pdf.cell(50, 10, txt="Descripción:", border=0)
+        self.pdf.multi_cell(0, 10, txt=f"{evento[2]}")
+        self.pdf.cell(50, 10, txt="Nombre del Cliente:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[3]}", ln=True)
+        self.pdf.cell(50, 10, txt="Monto Total Pagado:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[4]}", ln=True)
+        self.pdf.cell(50, 10, txt="Anticipo:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[5]}", ln=True)
+        self.pdf.cell(50, 10, txt="Servicio:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[6]}", ln=True)
+
+        # Línea separadora
+        self.pdf.ln(10)
+        self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+        self.pdf.ln(10)
+
+        # Texto grande "PAGADO"
+        self.pdf.set_font("Arial", style="B", size=50)
+        self.pdf.set_text_color(0, 255, 0)
+        self.pdf.cell(0, 10, txt="PAGADO", ln=True, align="C")
 
         # Pie de página
         self.pdf.set_y(-30)

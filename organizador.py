@@ -78,16 +78,13 @@ class VentanaPrincipal(QMainWindow):
         diseño_botones = QHBoxLayout()
         self.boton_añadir = QPushButton("Añadir")
         self.boton_añadir.setStyleSheet("background-color: #FF7E67; color: white;")
-        self.boton_eliminar = QPushButton("Eliminar")
 
         diseño_botones.addWidget(self.boton_añadir)
-        diseño_botones.addWidget(self.boton_eliminar)
         self.diseño_lateral_derecho.addLayout(diseño_botones)
         
         # Añadir nuevo contenido para la interfaz de eventos
         self.boton_añadir.clicked.connect(self.anadirEvento)
         self.boton_añadir.clicked.connect(lambda: self.boton_añadir.clicked.disconnect())
-        # self.boton_eliminar.clicked.connect(self.eliminarEvento)
 
         buscarProovedor = QLineEdit()
         buscarProovedor.setPlaceholderText("Datos del proveedor aquí")

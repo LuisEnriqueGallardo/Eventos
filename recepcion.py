@@ -123,11 +123,11 @@ class Recepcion(QWidget):
         mensaje.setText(f"""Numero: {evento[0]}\n Fecha: {evento[1]}\nCliente: {evento[2]} {evento[3]} {evento[4]}\nTeléfono: {evento[5]}\nSalón: {evento[6]},\n\nInformación adicional: {evento[7]}""")
         cerrar = mensaje.addButton("Cerrar", QMessageBox.RejectRole)
         imprimirbt = mensaje.addButton("Imprimir", QMessageBox.AcceptRole)
-        imprimirbt.clicked.connect(lambda: self.imprimir(evento))
+        imprimirbt.clicked.connect(lambda: self.imprimirNoPagado(evento))
         
         mensaje.exec_()
     
-    def imprimir(self, evento):
+    def imprimirNoPagado(self, evento):
         # Imprime un PDF con la información del evento seleccionado
         self.pdf = pdf(f"{evento[2]} {evento[3]} {evento[4]}.pdf")
         self.pdf.generar_evento(evento)
@@ -218,8 +218,32 @@ class Recepcion(QWidget):
                     item.setForeground(QColor(0, 0, 0))
                     item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                     tablaPagos.setItem(i, j, item)
-            tablaPagos.itemClicked.connect(self.eventoClicado)
+            tablaPagos.itemClicked.connect(self.eventoClicadoPagado)
         tablaPagos.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+    def eventoClicadoPagado(self, item):
+        row = item.row()
+        idRenglon = item.tableWidget().item(row, 0).text()
+        detalles = []
+
+        for col in range(item.tableWidget().columnCount()):
+            detalles.append(item.tableWidget().item(row, col).text())
+        
+        # Obtener información del evento seleccionado
+        evento = self.db.consultar_evento_detallado(idRenglon)
+        mensaje = QMessageBox(self)
+        mensaje.setWindowTitle("Información del evento")
+        mensaje.setText(f"""Numero: {evento[0]}\n Fecha: {evento[1]}\nCliente: {evento[2]} {evento[3]} {evento[4]}\nTeléfono: {evento[5]}\nSalón: {evento[6]},\n\nInformación adicional: {evento[7]}""")
+        cerrar = mensaje.addButton("Cerrar", QMessageBox.RejectRole)
+        imprimirbt = mensaje.addButton("Imprimir", QMessageBox.AcceptRole)
+        imprimirbt.clicked.connect(lambda: self.imprimirPagado(detalles))
+        
+        mensaje.exec_()
+
+    def imprimirPagado(self, evento):
+        # Imprime un PDF con la información del evento seleccionado
+        self.pdf = pdf(f"{evento[2]} {evento[3]} {evento[4]}.pdf")
+        self.pdf.agregar_evento_pagado(evento)
 
     def limpiar(self):
         # Limpiar el diseño lateral derecho
