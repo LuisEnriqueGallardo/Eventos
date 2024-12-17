@@ -77,11 +77,11 @@ class Recepcion(QWidget):
         buscarProovedor.setPlaceholderText("Datos del proveedor aquí")
         
         mostrarProovedor = QTableWidget()
-        mostrarProovedor.setColumnCount(6)
+        mostrarProovedor.setColumnCount(7)
         mostrarProovedor.verticalHeader().setVisible(False)
         mostrarProovedor.setEditTriggers(QTableWidget.NoEditTriggers)
         mostrarProovedor.setSelectionBehavior(QTableWidget.SelectRows)
-        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Total", "Anticipo"])
+        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Total", "Anticipo", "Servicio"])
         mostrarProovedor.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         mostrarProovedor.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
@@ -97,6 +97,8 @@ class Recepcion(QWidget):
             mostrarProovedor.setRowCount(len(eventos))
             for i, evento in enumerate(eventos):
                 for j, campo in enumerate(evento):
+                    if campo == None:
+                        campo = "N/A"
                     item = QTableWidgetItem(str(campo))
                     item.setTextAlignment(Qt.AlignCenter)
                     item.setBackground(QColor(255, 255, 255))
@@ -134,11 +136,6 @@ class Recepcion(QWidget):
         # Limpiar el diseño lateral derecho
         self.limpiar()
                 
-        # Añadir nuevo contenido para la interfaz de pagos
-        botonPagar = QPushButton("Pagar")
-        botonPagar.setStyleSheet("background-color: #FF7E67; color: white;")
-        self.diseño_derecho.addWidget(botonPagar)
-        
         # Interfaz de pagos
         tablaPagos = QTableWidget()
         tablaPagos.setColumnCount(7)
@@ -198,11 +195,11 @@ class Recepcion(QWidget):
         
         # Añadir nuevo contenido para la interfaz de eventos pagados
         tablaPagos = QTableWidget()
-        tablaPagos.setColumnCount(6)
+        tablaPagos.setColumnCount(7)
         tablaPagos.setEditTriggers(QTableWidget.NoEditTriggers)
         tablaPagos.setSelectionBehavior(QTableWidget.SelectRows)
         tablaPagos.verticalHeader().setVisible(False)
-        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Monto", "Fecha saldada"])
+        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Monto", "Fecha saldada", "Servicios"])
         tablaPagos.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         self.diseño_derecho.addWidget(tablaPagos)
 
@@ -213,6 +210,8 @@ class Recepcion(QWidget):
             for i, pago in enumerate(pagos):
                 nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
                 for j, campo in enumerate(pago):
+                    if campo == None:
+                        campo = "N/A"
                     item = QTableWidgetItem(str(campo))
                     item.setTextAlignment(Qt.AlignCenter)
                     item.setBackground(QColor(255, 255, 255))

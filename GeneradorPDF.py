@@ -6,62 +6,116 @@ class GeneradorPDF:
     def __init__(self, nombre_archivo="evento.pdf"):
         self.nombre_archivo = nombre_archivo
         self.pdf = FPDF()
+        self.pdf.set_auto_page_break(auto=True, margin=15)
         self.pdf.set_font("Arial", size=12)
-    
+
     def generar_evento(self, evento):
         """
-        Genera el PDF con los detalles de un evento y lo guarda.
-        
-        evento: tupla con los datos del evento en el siguiente orden:
-            No., fecha, nombre, apellido_paterno, apellido_materno, telefono, salon, descripcion
+        Genera un PDF con la información del evento.
+        Args:
+            evento (tuple): Información del evento en el siguiente orden:
+                            No., fecha, nombre, apellido_paterno, apellido_materno, telefono, salon, descripcion
         """
         self.pdf.add_page()
-        
+
         # Encabezado
-        self.pdf.set_font("Arial", style='B', size=16)
-        self.pdf.cell(200, 10, txt="Detalles del Evento", ln=True, align='C')
+        self.pdf.set_font("Arial", style="B", size=24)
+        self.pdf.cell(0, 10, txt="Eventify", ln=True, align="C")
+        self.pdf.set_font("Arial", size=12)
+        self.pdf.cell(0, 10, txt="Transformando momentos en recuerdos inolvidables.", ln=True, align="C")
+        self.pdf.ln(20)  # Espacio
+
+        # Línea separadora
+        self.pdf.set_draw_color(0, 0, 0)
+        self.pdf.set_line_width(0.5)
+        self.pdf.line(10, 40, 200, 40)
         self.pdf.ln(10)  # Espacio
 
         # Datos del evento
+        self.pdf.set_font("Arial", style="B", size=14)
+        self.pdf.cell(0, 10, txt="Detalles del Evento", ln=True, align="L")
+        self.pdf.ln(5)
+
         self.pdf.set_font("Arial", size=12)
-        self.pdf.cell(0, 10, txt=f"ID del Evento: {evento[0]}", ln=True)
-        self.pdf.cell(0, 10, txt=f"Fecha: {evento[1].strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-        self.pdf.cell(0, 10, txt=f"Nombre del Cliente: {evento[2]} {evento[3]} {evento[4]}", ln=True)
-        self.pdf.cell(0, 10, txt=f"Teléfono: {evento[5]}", ln=True)
-        self.pdf.cell(0, 10, txt=f"Salón: {evento[6]}", ln=True)
-        self.pdf.cell(0, 10, txt=f"Descripción: {evento[7]}", ln=True)
+        self.pdf.cell(50, 10, txt="Número de Evento:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[0]}", ln=True)
+        self.pdf.cell(50, 10, txt="Fecha:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[1].strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+        self.pdf.cell(50, 10, txt="Nombre del Cliente:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[2]} {evento[3]} {evento[4]}", ln=True)
+        self.pdf.cell(50, 10, txt="Teléfono:", border=0)
+        self.pdf.cell(0, 10, txt=f"{evento[5]}", ln=True)
+        self.pdf.cell(50, 10, txt="Salón:", border=0) 
+        self.pdf.cell(0, 10, txt=f"{evento[6]}", ln=True)
+        self.pdf.cell(50, 10, txt="Descripción:", border=0)
+        self.pdf.multi_cell(0, 10, txt=f"{evento[7]}")
+
+        # Línea separadora
+        self.pdf.ln(10)
+        self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+        self.pdf.ln(10)
+
+        # Pie de página
+        self.pdf.set_y(-30)
+        self.pdf.set_font("Arial", size=10)
+        self.pdf.cell(0, 10, txt="Gracias por confiar en Eventify.", ln=True, align="C")
+        self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
 
         # Guardar el PDF
         self.pdf.output(self.nombre_archivo)
-        # Abrir el PDF después de guardarlo
         os.startfile(self.nombre_archivo)
         print(f"PDF generado y guardado como: {self.nombre_archivo}")
-    
+
     def agregar_servicios(self, servicios):
         """
-        Agrega una sección con los servicios al PDF.
-
-        servicios: lista de tuplas con los datos del servicio (servicio, descripcion, telefono).
+        Agrega la información de los servicios contratados al PDF.
+        Args:
+            servicios (list): Lista de tuplas con la información de los servicios contratados.
+                              Cada tupla debe contener (servicio, descripcion, telefono).
         """
         self.pdf.add_page()
 
-        # Encabezado para la sección de servicios
-        self.pdf.set_font("Arial", style='B', size=16)
-        self.pdf.cell(200, 10, txt="Servicios", ln=True, align='C')
+        # Encabezado
+        self.pdf.set_font("Arial", style="B", size=24)
+        self.pdf.cell(0, 10, txt="Eventify", ln=True, align="C")
+        self.pdf.set_font("Arial", size=12)
+        self.pdf.cell(0, 10, txt="Transformando momentos en recuerdos inolvidables.", ln=True, align="C")
+        self.pdf.ln(20)  # Espacio
+
+        # Línea separadora
+        self.pdf.set_draw_color(0, 0, 0)
+        self.pdf.set_line_width(0.5)
+        self.pdf.line(10, 40, 200, 40)
         self.pdf.ln(10)  # Espacio
 
-        # Listar servicios
+        # Datos de los servicios
+        self.pdf.set_font("Arial", style="B", size=14)
+        self.pdf.cell(0, 10, txt="Servicios Contratados", ln=True, align="L")
+        self.pdf.ln(5)
+
         self.pdf.set_font("Arial", size=12)
         for servicio in servicios:
-            self.pdf.cell(0, 10, txt=f"Servicio: {servicio[1]}", ln=True)
-            self.pdf.cell(0, 10, txt=f"Descripción: {servicio[2]}", ln=True)
-            self.pdf.cell(0, 10, txt=f"Teléfono: {servicio[3]}", ln=True)
-            # Separador entre servicios
-            self.pdf.ln(10)
-            self.pdf.cell(0, 10, txt="--------------------------------", ln=True)
-        
+            self.pdf.cell(50, 10, txt="Servicio:", border=0)
+            self.pdf.cell(0, 10, txt=f"{servicio[1]}", ln=True)
+            self.pdf.cell(50, 10, txt="Descripción:", border=0)
+            self.pdf.multi_cell(0, 10, txt=f"{servicio[2]}")
+            self.pdf.cell(50, 10, txt="Teléfono de Contacto:", border=0)
+            self.pdf.cell(0, 10, txt=f"{servicio[3]}", ln=True)
+            self.pdf.ln(5)
+            self.pdf.cell(0, 10, txt="--- Siguiente ---", ln=True, align="C")
+
+        # Línea separadora
+        self.pdf.ln(10)
+        self.pdf.line(10, self.pdf.get_y(), 200, self.pdf.get_y())
+        self.pdf.ln(10)
+
+        # Pie de página
+        self.pdf.set_y(-30)
+        self.pdf.set_font("Arial", size=10)
+        self.pdf.cell(0, 10, txt="Gracias por confiar en Eventify.", ln=True, align="C")
+        self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
+
         # Guardar el PDF
         self.pdf.output(self.nombre_archivo)
-        # Abrir el PDF después de guardarlo
         os.startfile(self.nombre_archivo)
         print(f"PDF generado y guardado como: {self.nombre_archivo}")

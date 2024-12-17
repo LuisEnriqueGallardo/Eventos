@@ -147,14 +147,10 @@ class VentanaAdmin(QMainWindow):
         eliminar = mensaje.addButton("Eliminar", QMessageBox.AcceptRole)
 
         mensaje.exec_()
-
-        # if mensaje.clickedButton() == eliminar:
-        #     self.db.eliminar_cliente(idRenglon)
-        #     self.interfazClientes()
-
+        
     def anadirCliente(self):
         # Ventana para añadir un cliente
-        QDIalog = QDialog()
+        self.QDIalogCl = QDialog()
         nombre_cliente = QLineEdit()
         nombre_cliente.setPlaceholderText("Nombre del cliente")
         apellido_paterno = QLineEdit()
@@ -163,22 +159,33 @@ class VentanaAdmin(QMainWindow):
         apellido_materno.setPlaceholderText("Apellido materno")
         telefono_cliente = QLineEdit()
         telefono_cliente.setPlaceholderText("Teléfono del cliente")
-
-        layout = QVBoxLayout()
-        layout.addWidget(nombre_cliente)
-        layout.addWidget(apellido_paterno)
-        layout.addWidget(apellido_materno)
-        layout.addWidget(telefono_cliente)
+        self.layoutCl = QVBoxLayout()
+        self.layoutCl.addWidget(nombre_cliente)
+        self.layoutCl.addWidget(apellido_paterno)
+        self.layoutCl.addWidget(apellido_materno)
+        self.layoutCl.addWidget(telefono_cliente)
         boton = QPushButton("Añadir")
-        boton.clicked.connect(lambda: self.db.insertar_Cliente(nombre_cliente.text(), apellido_paterno.text(), apellido_materno.text(), telefono_cliente.text()))
-        boton.clicked.connect(lambda: QMessageBox.information(self, "Cliente añadido", "Cliente añadido"))
-        boton.clicked.connect(lambda: self.eliminarLayout(layout))
-        boton.clicked.connect(lambda: self.eliminarLayout(self.layoutEvento))
-        boton.clicked.connect(lambda: self.eliminarLayout(self.interfazEventos()))
-        boton.clicked.connect(QDIalog.close)
-        layout.addWidget(boton)
-        QDIalog.setLayout(layout)
-        QDIalog.exec()
+
+        boton.clicked.connect(lambda: self.insertarCliente(nombre_cliente.text(), apellido_paterno.text(), apellido_materno.text(), telefono_cliente.text()))
+        self.layoutCl.addWidget(boton)
+        self.QDIalogCl.setLayout(self.layoutCl)
+        self.QDIalogCl.exec()
+
+    def insertarCliente(self, nombre_cliente, apellido_paterno, apellido_materno, telefono_cliente):
+        try:
+            if self.db.insertar_Cliente(nombre_cliente, apellido_paterno, apellido_materno, telefono_cliente):
+                QMessageBox.information(self, "Cliente añadido", "Cliente añadido")
+                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.diseño_lateral_derecho)
+                self.limpiar_diseño(self.interfazEventos())
+                self.QDIalogCl.close()
+                self.interfazClientes()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el cliente, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el cliente, revise los campos")
+            return
          
     def interfazEventos(self):
         # Limpiar el diseño lateral derecho
@@ -189,11 +196,11 @@ class VentanaAdmin(QMainWindow):
         buscarProovedor.setPlaceholderText("Datos del proveedor aquí")
         
         mostrarProovedor = QTableWidget()
-        mostrarProovedor.setColumnCount(6)
+        mostrarProovedor.setColumnCount(7)
         mostrarProovedor.verticalHeader().setVisible(False)
         mostrarProovedor.setEditTriggers(QTableWidget.NoEditTriggers)
         mostrarProovedor.setSelectionBehavior(QTableWidget.SelectRows)
-        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Total", "Anticipo"])
+        mostrarProovedor.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Total", "Anticipo", "Servicio"])
         mostrarProovedor.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
 
         area_desplazamiento = QScrollArea()
@@ -208,6 +215,8 @@ class VentanaAdmin(QMainWindow):
             mostrarProovedor.setRowCount(len(eventos))
             for i, evento in enumerate(eventos):
                 for j, campo in enumerate(evento):
+                    if campo == None:
+                        campo = "N/A"
                     item = QTableWidgetItem(str(campo))
                     item.setTextAlignment(Qt.AlignCenter)
                     item.setBackground(QColor(255, 255, 255))
@@ -291,7 +300,7 @@ class VentanaAdmin(QMainWindow):
 
     def insertarEmpleado(self):
         # Ventana para añadir un empleado
-        QDIalog = QDialog()
+        self.QDIalogEm = QDialog()
         nombre_empleado = QLineEdit()
         nombre_empleado.setPlaceholderText("Nombre del empleado")
         apellido_paterno = QLineEdit()
@@ -318,35 +327,52 @@ class VentanaAdmin(QMainWindow):
         for puesto in puestos:
             puesto_empleado.addItem(puesto[1])
 
-        layout = QVBoxLayout()
-        layout.addWidget(nombre_empleado)
-        layout.addWidget(apellido_paterno)
-        layout.addWidget(apellido_materno)
-        layout.addWidget(direccion_empleado)
-        layout.addWidget(telefono_empleado)
-        layout.addWidget(puesto_empleado)
-        layout.addWidget(usuario_empleado)
-        layout.addWidget(contraseña_empleado)
-        layout.addWidget(usuario_correo)
+        self.layoutEm = QVBoxLayout()
+        self.layoutEm.addWidget(nombre_empleado)
+        self.layoutEm.addWidget(apellido_paterno)
+        self.layoutEm.addWidget(apellido_materno)
+        self.layoutEm.addWidget(direccion_empleado)
+        self.layoutEm.addWidget(telefono_empleado)
+        self.layoutEm.addWidget(puesto_empleado)
+        self.layoutEm.addWidget(usuario_empleado)
+        self.layoutEm.addWidget(contraseña_empleado)
+        self.layoutEm.addWidget(usuario_correo)
 
         boton = QPushButton("Añadir")
-        boton.clicked.connect(lambda: self.db.insertar_Empleado(nombre_empleado.text(), apellido_paterno.text(), apellido_materno.text(), direccion_empleado.text(), telefono_empleado.text(), (puesto_empleado.currentIndex() + 1),puesto_empleado.currentText() ,usuario_empleado.text(), contraseña_empleado.text(), usuario_correo.text()))
-        boton.clicked.connect(lambda: QMessageBox.information(self, "Empleado añadido", "Empleado añadido"))
-        boton.clicked.connect(lambda: self.limpiar_diseño(layout))
-        boton.clicked.connect(lambda: self.interfazEmpleados())
-        boton.clicked.connect(QDIalog.close)
-        layout.addWidget(boton)
-        QDIalog.setLayout(layout)
-        QDIalog.exec()
+        boton.clicked.connect(lambda: self.IngresarEmpleado(nombre_empleado.text(), apellido_paterno.text(), apellido_materno.text(), direccion_empleado.text(), telefono_empleado.text(), puesto_empleado.currentText(), puesto_empleado.currentIndex(), usuario_empleado.text(), contraseña_empleado.text(), usuario_correo.text()))
+        self.layoutEm.addWidget(boton)
+        self.QDIalogEm.setLayout(self.layoutEm)
+        self.QDIalogEm.exec()
+
+    def IngresarEmpleado(self, nombre_empleado, apellido_paterno, apellido_materno, direccion_empleado, telefono_empleado, puesto_empleado, puesto_empleado_text, usuario_empleado, contraseña_empleado, usuario_correo):
+        try:
+            if self.db.insertar_Empleado(nombre_empleado, apellido_paterno, apellido_materno, direccion_empleado, telefono_empleado, puesto_empleado, puesto_empleado_text, usuario_empleado, contraseña_empleado, usuario_correo):
+                QMessageBox.information(self, "Empleado añadido", "Empleado añadido")
+                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.diseño_lateral_derecho)
+                self.limpiar_diseño(self.interfazEmpleados())
+                self.QDIalogEm.close()
+                self.limpiar_diseño(self.layoutEm)
+                self.interfazEmpleados()
+                self.interfazClientes()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el empleado, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el empleado, revise los campos")
+            return
 
     def limpiar_diseño(self, layout):
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.deleteLater()
-            else:
-                self.limpiar_diseño(item.layout())
+        try:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self.limpiar_diseño(item.layout())
+        except Exception as e:
+            print(e)
 
     def interfazSalones(self):
         # Limpiar el diseño lateral derecho
@@ -389,30 +415,36 @@ class VentanaAdmin(QMainWindow):
 
     def anadirSalon(self):
         # Ventana para añadir un salon
-        QDIalog = QDialog()
+        self.QDIalogSa = QDialog()
         nombre_salon = QLineEdit()
         nombre_salon.setPlaceholderText("Nombre del salon")
 
         layout = QVBoxLayout()
         layout.addWidget(nombre_salon)
         boton = QPushButton("Añadir")
-        boton.clicked.connect(lambda: self.db.insertar_Salon(nombre_salon.text()))
-        boton.clicked.connect(lambda: QMessageBox.information(self, "Salon añadido", "Salon añadido"))
-        boton.clicked.connect(lambda: self.limpiar_diseño(layout))
-        boton.clicked.connect(lambda: self.interfazSalones())
-        boton.clicked.connect(QDIalog.close)
+        boton.clicked.connect(lambda: self.ingresarSalon(nombre_salon.text()))
         layout.addWidget(boton)
-        QDIalog.setLayout(layout)
-        QDIalog.exec()
+        self.QDIalogSa.setLayout(layout)
+        self.QDIalogSa.exec()
+
+    def ingresarSalon(self, nombre_salon):
+        try:
+            if self.db.insertar_Salon(nombre_salon):
+                QMessageBox.information(self, "Salon añadido", "Salon añadido")
+                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.diseño_lateral_derecho)
+                self.limpiar_diseño(self.interfazSalones())
+                self.QDIalogSa.close()
+                self.interfazSalones()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el salon, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el salon, revise los campos")
 
     def ventanaPagos(self):
         # Limpiar el diseño lateral derecho
         self.limpiar_diseño(self.diseño_lateral_derecho)
-                
-        # Añadir nuevo contenido para la interfaz de pagos
-        botonPagar = QPushButton("Pagar")
-        botonPagar.setStyleSheet("background-color: #FF7E67; color: white;")
-        self.diseño_lateral_derecho.addWidget(botonPagar)
         
         # Interfaz de pagos
         tablaPagos = QTableWidget()
@@ -478,7 +510,7 @@ class VentanaAdmin(QMainWindow):
         proveedores = self.db.consultar_Proveedores()
         if proveedores:
             tabla_proveedores = QTableWidget()
-            tabla_proveedores.setColumnCount(3)
+            tabla_proveedores.setColumnCount(4)
             tabla_proveedores.verticalHeader().setVisible(False)
             tabla_proveedores.setEditTriggers(QTableWidget.NoEditTriggers)
             tabla_proveedores.setSelectionBehavior(QTableWidget.SelectRows)
@@ -528,7 +560,7 @@ class VentanaAdmin(QMainWindow):
 
     def anadirProveedor(self):
         # Ventana para añadir un proveedor
-        QDIalog = QDialog()
+        self.QDIalogPr = QDialog()
         nombre_proveedor = QLineEdit()
         nombre_proveedor.setPlaceholderText("Nombre del proveedor")
         correo_proveedor = QLineEdit()
@@ -541,14 +573,26 @@ class VentanaAdmin(QMainWindow):
         layout.addWidget(correo_proveedor)
         layout.addWidget(servicio_proveedor)
         boton = QPushButton("Añadir")
-        boton.clicked.connect(lambda: self.db.insertar_Proveedor(nombre_proveedor.text(), correo_proveedor.text(), servicio_proveedor.text()))
-        boton.clicked.connect(lambda: QMessageBox.information(self, "Proveedor añadido", "Proveedor añadido"))
-        boton.clicked.connect(lambda: self.limpiar_diseño(layout))
-        boton.clicked.connect(lambda: self.interfazProveedores())
-        boton.clicked.connect(QDIalog.close)
+        boton.clicked.connect(lambda: self.insertarProveedor(nombre_proveedor.text(), correo_proveedor.text(), servicio_proveedor.text()))
         layout.addWidget(boton)
-        QDIalog.setLayout(layout)
-        QDIalog.exec()
+        self.QDIalogPr.setLayout(layout)
+        self.QDIalogPr.exec()
+
+    def insertarProveedor(self, nombre_proveedor, correo_proveedor, servicio_proveedor):
+        try:
+            if self.db.insertar_Proveedor(nombre_proveedor, correo_proveedor, servicio_proveedor):
+                QMessageBox.information(self, "Proveedor añadido", "Proveedor añadido")
+                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.diseño_lateral_derecho)
+                self.limpiar_diseño(self.interfazProveedores())
+                self.QDIalogPr.close()
+                self.interfazProveedores()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el proveedor, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el proveedor, revise los campos")
+            return
         
     def interfazServiciosEvento(self):
         """Esta función actualiza toda la interfaz para mostrar los servicios de eventos en pantalla
@@ -615,7 +659,7 @@ class VentanaAdmin(QMainWindow):
     
     def anadirServicio(self):
         # Ventana para añadir un servicio
-        QDIalog = QDialog()
+        self.QDIalogSe = QDialog()
         nombre_servicio = QLineEdit()
         nombre_servicio.setPlaceholderText("Nombre del servicio")
         descripcion_servicio = QLineEdit()
@@ -628,14 +672,26 @@ class VentanaAdmin(QMainWindow):
         layout.addWidget(descripcion_servicio)
         layout.addWidget(telefono_servicio)
         boton = QPushButton("Añadir")
-        boton.clicked.connect(lambda: self.db.insertar_Servicio(nombre_servicio.text(), descripcion_servicio.text(), telefono_servicio.text()))
-        boton.clicked.connect(lambda: QMessageBox.information(self, "Servicio añadido", "Servicio añadido"))
-        boton.clicked.connect(lambda: self.eliminarLayout(layout))
-        boton.clicked.connect(lambda: self.interfazServiciosEvento())
-        boton.clicked.connect(QDIalog.close)
+        boton.clicked.connect(lambda: self.ingresarServicio(nombre_servicio.text(), descripcion_servicio.text(), telefono_servicio.text()))
         layout.addWidget(boton)
-        QDIalog.setLayout(layout)
-        QDIalog.exec()
+        self.QDIalogSe.setLayout(layout)
+        self.QDIalogSe.exec()
+
+    def ingresarServicio(self, nombre_servicio, descripcion_servicio, telefono_servicio):
+        try:
+            if self.db.insertar_Servicio(nombre_servicio, descripcion_servicio, telefono_servicio):
+                QMessageBox.information(self, "Servicio añadido", "Servicio añadido")
+                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.diseño_lateral_derecho)
+                self.limpiar_diseño(self.interfazServiciosEvento())
+                self.QDIalogSe.close()
+                self.interfazServiciosEvento()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el servicio, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el servicio, revise los campos")
+            return
     
     def ventana_eventos_pagados(self):
         # Limpiar el diseño lateral derecho
@@ -643,11 +699,11 @@ class VentanaAdmin(QMainWindow):
         
         # Añadir nuevo contenido para la interfaz de eventos pagados
         tablaPagos = QTableWidget()
-        tablaPagos.setColumnCount(6)
+        tablaPagos.setColumnCount(7)
         tablaPagos.setEditTriggers(QTableWidget.NoEditTriggers)
         tablaPagos.setSelectionBehavior(QTableWidget.SelectRows)
         tablaPagos.verticalHeader().setVisible(False)
-        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Monto", "Fecha saldada"])
+        tablaPagos.setHorizontalHeaderLabels(["No.", "Fecha", "Descripción", "Nombres", "Monto", "Fecha saldada", "Servicios"])
         tablaPagos.setSizeAdjustPolicy(QTableWidget.AdjustToContents)
         self.diseño_derecho.addWidget(tablaPagos)
 
@@ -658,6 +714,8 @@ class VentanaAdmin(QMainWindow):
             for i, pago in enumerate(pagos):
                 nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
                 for j, campo in enumerate(pago):
+                    if campo == None:
+                        campo = "N/A"
                     item = QTableWidgetItem(str(campo))
                     item.setTextAlignment(Qt.AlignCenter)
                     item.setBackground(QColor(255, 255, 255))

@@ -76,6 +76,8 @@ class BaseDeDatos:
         
     def insertar_Empleado(self, nombres, apellido_paterno, apellido_materno, direccion, telefono, puesto, puestotext, usuario, contrasenia, correo):
         try:
+            if not nombres or not apellido_paterno or not apellido_materno or not direccion or not telefono or not puesto or not usuario or not contrasenia or not correo:
+                return False
             # Insertar empleado en empleados_info
             ins = "INSERT INTO empleados_info (nombres, apellido_paterno, apellido_materno, direccion, telefono, puesto) VALUES (%s, %s, %s, %s, %s, %s)"
             self.cursor.execute(ins, (nombres, apellido_paterno, apellido_materno, direccion, telefono, puesto))
@@ -142,14 +144,17 @@ class BaseDeDatos:
             print(f"Error al consultar evento detallado: {e}")
             return None
     
-    def insertar_evento(self, pagoinicial, monto, fecha, descripcion, clienteid, salon):
+    def insertar_evento(self, pagoinicial, monto, fecha, descripcion, clienteid, salon, servicio):
         try:
-            salonid = "SELECT id_salon FROM salones WHERE salon = %s"
-            self.cursor.execute(salonid, (salon,))
-            salon = self.cursor.fetchone()[0]
+            if servicio == "Ninguno":
+                servicio = None
+            else:
+                servicioid = "SELECT id_servicios_eventos FROM servicios_eventos WHERE id_servicios_eventos = %s"
+                self.cursor.execute(servicioid, (servicio,))
+                servicio = self.cursor.fetchone()[0]
 
-            ins = "INSERT INTO eventos (fecha, descripcion, id_cliente, id_salon) VALUES (%s, %s, %s, %s)"
-            self.cursor.execute(ins, (fecha, descripcion, clienteid, salon))
+            ins = "INSERT INTO eventos (fecha, descripcion, id_cliente, id_salon, id_servicio) VALUES (%s, %s, %s, %s, %s)"
+            self.cursor.execute(ins, (fecha, descripcion, clienteid, salon, servicio))
             self.connection.commit()
 
             # Inserción de pago inicial
@@ -162,7 +167,28 @@ class BaseDeDatos:
     
     def consultar_eventos_no_pagados(self):
         try:
-            cons = "SELECT e.id_evento, e.fecha, e.descripcion, CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo, COALESCE(SUM(p.monto), 0) AS total, COALESCE(SUM(p.pago_inicial), 0) AS anticipo FROM eventos e INNER JOIN clientes c ON e.id_cliente = c.id_cliente LEFT JOIN pagos p ON e.id_evento = p.id_evento WHERE NOT EXISTS (SELECT 1 FROM pagos p2 WHERE p2.id_evento = e.id_evento AND p2.fecha_pago_final IS NOT NULL) GROUP BY e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno;"
+            cons = """
+                    SELECT 
+                        e.id_evento, 
+                        e.fecha, 
+                        e.descripcion, 
+                        CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo, 
+                        COALESCE(SUM(p.monto), 0) AS total, 
+                        COALESCE(SUM(p.pago_inicial), 0) AS anticipo,
+                        s.servicio
+                    FROM 
+                        eventos e 
+                    INNER JOIN 
+                        clientes c ON e.id_cliente = c.id_cliente 
+                    LEFT JOIN 
+                        pagos p ON e.id_evento = p.id_evento 
+                    LEFT JOIN 
+                        servicios_eventos s ON e.id_servicio = s.id_servicios_eventos
+                    WHERE 
+                        NOT EXISTS (SELECT 1 FROM pagos p2 WHERE p2.id_evento = e.id_evento AND p2.fecha_pago_final IS NOT NULL) 
+                    GROUP BY 
+                        e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno, s.servicio;
+                    """
             self.cursor.execute(cons)
             result = self.cursor.fetchall()
             return result
@@ -172,7 +198,26 @@ class BaseDeDatos:
     
     def consultar_eventos_pagados(self):
         try:
-            cons = "SELECT e.id_evento, e.fecha, e.descripcion, CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo, SUM(p.monto) AS monto_total_pagado, MAX(p.fecha_pago_inicial) AS fecha_ultimo_pago FROM eventos e INNER JOIN clientes c ON e.id_cliente = c.id_cliente INNER JOIN pagos p ON e.id_evento = p.id_evento WHERE p.fecha_pago_final IS NOT NULL GROUP BY e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno HAVING SUM(p.monto) >= (SELECT SUM(monto) FROM pagos WHERE id_evento = e.id_evento AND fecha_pago_final IS NOT NULL);"
+            cons = """SELECT 
+                        e.id_evento, 
+                        e.fecha, 
+                        e.descripcion, 
+                        CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo, 
+                        COALESCE(SUM(p.monto), 0) AS total, 
+                        COALESCE(SUM(p.pago_inicial), 0) AS anticipo,
+                        s.servicio 
+                    FROM 
+                        eventos e 
+                    INNER JOIN 
+                        clientes c ON e.id_cliente = c.id_cliente 
+                    LEFT JOIN 
+                        pagos p ON e.id_evento = p.id_evento 
+                    LEFT JOIN 
+                        servicios_eventos s ON e.id_servicio = s.id_servicios_eventos
+                    WHERE 
+                        EXISTS (SELECT 1 FROM pagos p2 WHERE p2.id_evento = e.id_evento AND p2.fecha_pago_final IS NOT NULL) 
+                    GROUP BY 
+                        e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno, s.id_servicios_eventos, s.servicio;"""
             self.cursor.execute(cons)
             result = self.cursor.fetchall()
             return result
@@ -192,6 +237,8 @@ class BaseDeDatos:
         
     def insertar_Salon(self, nombre):
         try:
+            if not nombre:
+                return False
             ins = "INSERT INTO salones (salon) VALUES (%s)"
             self.cursor.execute(ins, (nombre,))
             self.connection.commit()
@@ -281,6 +328,8 @@ class BaseDeDatos:
     
     def insertar_Cliente(self, nombres, apellido_paterno, apellido_materno, telefono):
         try:
+            if not nombres or not apellido_paterno or not apellido_materno or not telefono:
+                return False
             ins = "INSERT INTO clientes (nombres, apellido_paterno, apellido_materno, telefono) VALUES (%s, %s, %s, %s)"
             self.cursor.execute(ins, (nombres, apellido_paterno, apellido_materno, telefono))
             self.connection.commit()
@@ -321,6 +370,8 @@ class BaseDeDatos:
     
     def insertar_Proveedor(self, nombre, correo, telefono):
         try:
+            if not nombre or not correo or not telefono:
+                return False
             ins = "INSERT INTO proveedores (empresa, correo, servicio) VALUES (%s, %s, %s)"
             self.cursor.execute(ins, (nombre, correo, telefono))
             self.connection.commit()
@@ -341,6 +392,8 @@ class BaseDeDatos:
 
     def insertar_Servicio(self, nombre, descripcion, telefono):
         try:
+            if not nombre or not descripcion or not telefono:
+                return False
             ins = "INSERT INTO servicios_eventos (servicio, descripcion, telefono) VALUES (%s, %s, %s)"
             self.cursor.execute(ins, (nombre, descripcion, telefono))
             self.connection.commit()
@@ -348,3 +401,17 @@ class BaseDeDatos:
         except IntegrityError as e:
             print(f"Error al insertar servicio: {e}")
             return False
+        
+    def consultar_Servicio_porId(self, id_servicio):
+        try:
+            cons = "SELECT * FROM servicios_eventos WHERE id_servicio_evento = %s"
+            self.cursor.execute(cons, (id_servicio,))
+            result = self.cursor.fetchone()
+
+            if result:
+                return result
+            else:
+                return ["", "Sin Servicio"]
+        except DatabaseError as e:
+            print(f"Error al consultar servicio: {e}")
+            return None
