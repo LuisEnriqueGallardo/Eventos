@@ -154,7 +154,7 @@ class VentanaPrincipal(QMainWindow):
         servicios = self.db.consultar_servicios()
         servicios_combo.addItem("Ninguno")
         for servicio in servicios:
-            servicios_combo.addItem(f"{servicio[1]} {servicio[0]}")
+            servicios_combo.addItem(f"{servicio[1]} {servicio[0]}", servicio[0])
             servicios_combo.setItemData(servicios_combo.count() - 1, servicio[2], Qt.ToolTipRole)
         
         añadir_cliente_boton = QPushButton("Añadir Cliente")
@@ -173,7 +173,7 @@ class VentanaPrincipal(QMainWindow):
         
         aceptar_boton = QPushButton("Aceptar")
         aceptar_boton.setStyleSheet("background-color: #FF7E67; color: white;")
-        aceptar_boton.clicked.connect(lambda: self.insertarEvento(anticipo.text() ,precioTotal.text() ,fecha.text(), descripcion.text(), cliente_combo.currentText()[-1], salonCombo.currentIndex(), servicios_combo.currentText()[-1]))
+        aceptar_boton.clicked.connect(lambda: self.insertarEvento(anticipo.text() ,precioTotal.text() ,fecha.text(), descripcion.text(), cliente_combo.currentText()[-1], salonCombo.currentIndex(), servicios_combo.currentData()))
         self.layoutEvento = QVBoxLayout()
         self.layoutEvento.addWidget(cliente_label)
         self.layoutEvento.addWidget(cliente_combo)
@@ -189,9 +189,9 @@ class VentanaPrincipal(QMainWindow):
         
         self.diseño_lateral_derecho.addLayout(self.layoutEvento)
 
-    def insertarEvento(self, fecha, descripcion, cliente, salon, servicios, precioTotal, anticipo):
+    def insertarEvento(self, anticipo, precioTotal, fecha, descripcion, cliente_combo, salonCombo, servicios_combo):
         try:
-            if self.db.insertar_evento(anticipo, precioTotal, fecha, descripcion, cliente, salon, servicios):
+            if self.db.insertar_evento(anticipo, precioTotal, fecha, descripcion, cliente_combo, salonCombo, servicios_combo):
                 QMessageBox.information(self, "Evento añadido", "Evento añadido")
                 self.limpiar_diseño(self.layoutEvento)
                 self.interfazEventos()

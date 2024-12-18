@@ -87,7 +87,7 @@ class BaseDeDatos:
             id_empleado = self.cursor.lastrowid
 
             # Insertar usuario en la tabla usuario
-            ins = "INSERT INTO usuario (usuario, correo, MD5(contrasenia), id_empleado, rol) VALUES (%s, %s, %s, %s, %s)"
+            ins = "INSERT INTO usuario (usuario, correo, contrasenia, id_empleado, rol) VALUES (%s, %s, MD5(%s), %s, %s)"
             self.cursor.execute(ins, (usuario, correo, contrasenia, id_empleado, puestotext))
             self.connection.commit()
 
@@ -158,8 +158,9 @@ class BaseDeDatos:
             return None
     
     def insertar_evento(self, pagoinicial, monto, fecha, descripcion, clienteid, salon, servicio):
+        breakpoint()
         try:
-            if servicio == "Ninguno":
+            if servicio == "Ninguno" or not servicio:
                 servicio = None
             else:
                 servicioid = "SELECT id_servicios_eventos FROM servicios_eventos WHERE id_servicios_eventos = %s"
