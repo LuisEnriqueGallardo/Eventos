@@ -136,7 +136,20 @@ class BaseDeDatos:
         
     def consultar_evento_detallado(self, id_evento):
         try:
-            cons = "SELECT eventos.id_evento, eventos.fecha, clientes.nombres, clientes.apellido_paterno, clientes.apellido_materno, clientes.telefono, salones.salon, eventos.descripcion FROM eventos INNER JOIN clientes ON clientes.id_cliente = eventos.id_cliente INNER JOIN salones ON salones.id_salon = eventos.id_salon WHERE eventos.id_evento = %s;"
+            cons = """SELECT 
+                        eventos.id_evento, 
+                        eventos.fecha, 
+                        clientes.nombres, 
+                        clientes.apellido_paterno, 
+                        clientes.apellido_materno, 
+                        clientes.telefono, 
+                        salones.salon, 
+                        eventos.descripcion 
+                    FROM eventos 
+                    LEFT JOIN clientes ON clientes.id_cliente = eventos.id_cliente 
+                    LEFT JOIN salones ON salones.id_salon = eventos.id_salon 
+                    WHERE eventos.id_evento = %s;
+                    """
             self.cursor.execute(cons, (id_evento,))
             result = self.cursor.fetchone()
             return result
@@ -184,8 +197,6 @@ class BaseDeDatos:
                         pagos p ON e.id_evento = p.id_evento 
                     LEFT JOIN 
                         servicios_eventos s ON e.id_servicio = s.id_servicios_eventos
-                    WHERE 
-                        NOT EXISTS (SELECT 1 FROM pagos p2 WHERE p2.id_evento = e.id_evento AND p2.fecha_pago_final IS NOT NULL) 
                     GROUP BY 
                         e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno, s.servicio;
                     """
@@ -202,22 +213,21 @@ class BaseDeDatos:
                         e.id_evento, 
                         e.fecha, 
                         e.descripcion, 
-                        CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo, 
-                        COALESCE(SUM(p.monto), 0) AS total, 
-                        COALESCE(SUM(p.pago_inicial), 0) AS anticipo,
-                        s.servicio 
+                        CONCAT(c.nombres, ' ', c.apellido_paterno, ' ', c.apellido_materno) AS nombre_completo,
+                        p.monto AS total, 
+                        p.pago_inicial AS anticipo,
+                        se.servicio AS servicio
                     FROM 
-                        eventos e 
-                    INNER JOIN 
-                        clientes c ON e.id_cliente = c.id_cliente 
+                        eventos e
+                    JOIN 
+                        pagos p ON e.id_evento = p.id_evento
                     LEFT JOIN 
-                        pagos p ON e.id_evento = p.id_evento 
+                        clientes c ON e.id_cliente = c.id_cliente
                     LEFT JOIN 
-                        servicios_eventos s ON e.id_servicio = s.id_servicios_eventos
+                        servicios_eventos se ON e.id_servicio = se.id_servicios_eventos
                     WHERE 
-                        EXISTS (SELECT 1 FROM pagos p2 WHERE p2.id_evento = e.id_evento AND p2.fecha_pago_final IS NOT NULL) 
-                    GROUP BY 
-                        e.id_evento, e.fecha, e.descripcion, c.nombres, c.apellido_paterno, c.apellido_materno, s.id_servicios_eventos, s.servicio;"""
+                        p.fecha_pago_final IS NOT NULL;
+                    """
             self.cursor.execute(cons)
             result = self.cursor.fetchall()
             return result

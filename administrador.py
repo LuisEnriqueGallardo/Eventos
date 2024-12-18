@@ -147,6 +147,10 @@ class VentanaAdmin(QMainWindow):
         eliminar = mensaje.addButton("Eliminar", QMessageBox.AcceptRole)
 
         mensaje.exec_()
+
+        if mensaje.clickedButton() == eliminar:
+            self.db.eliminar_cliente(idRenglon)
+            self.interfazClientes()
         
     def anadirCliente(self):
         # Ventana para añadir un cliente

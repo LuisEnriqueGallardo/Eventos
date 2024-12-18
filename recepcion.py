@@ -152,6 +152,8 @@ class Recepcion(QWidget):
             tablaPagos.setRowCount(len(pagos))
             for i, pago in enumerate(pagos):
                 nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
+                if nombreCliente == None:
+                    nombreCliente = ["N/A", "N/A", "N/A"]
                 for j, campo in enumerate(pago):
                     item = QTableWidgetItem(str(campo))
                     item.setTextAlignment(Qt.AlignCenter)
@@ -209,6 +211,8 @@ class Recepcion(QWidget):
             tablaPagos.setRowCount(len(pagos))
             for i, pago in enumerate(pagos):
                 nombreCliente = self.db.consultar_Cliente_porEvento(pago[1])
+                if nombreCliente == None:
+                    nombreCliente = ["N/A", "N/A", "N/A"]
                 for j, campo in enumerate(pago):
                     if campo == None:
                         campo = "N/A"
@@ -230,9 +234,14 @@ class Recepcion(QWidget):
             detalles.append(item.tableWidget().item(row, col).text())
         
         # Obtener información del evento seleccionado
-        evento = self.db.consultar_evento_detallado(idRenglon)
+        evento = list(self.db.consultar_evento_detallado(idRenglon))
         mensaje = QMessageBox(self)
         mensaje.setWindowTitle("Información del evento")
+
+        for i in range(len(evento)):
+            if evento[i] == None:
+                evento[i] = "N/A"
+
         mensaje.setText(f"""Numero: {evento[0]}\n Fecha: {evento[1]}\nCliente: {evento[2]} {evento[3]} {evento[4]}\nTeléfono: {evento[5]}\nSalón: {evento[6]},\n\nInformación adicional: {evento[7]}""")
         cerrar = mensaje.addButton("Cerrar", QMessageBox.RejectRole)
         imprimirbt = mensaje.addButton("Imprimir", QMessageBox.AcceptRole)

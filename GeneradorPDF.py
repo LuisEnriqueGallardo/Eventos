@@ -67,9 +67,7 @@ class GeneradorPDF:
         self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
 
         # Guardar el PDF
-        self.pdf.output(self.nombre_archivo)
-        os.startfile(self.nombre_archivo)
-        print(f"PDF generado y guardado como: {self.nombre_archivo}")
+        self._guardar_pdf()
 
     def agregar_servicios(self, servicios):
         """
@@ -121,9 +119,7 @@ class GeneradorPDF:
         self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
 
         # Guardar el PDF
-        self.pdf.output(self.nombre_archivo)
-        os.startfile(self.nombre_archivo)
-        print(f"PDF generado y guardado como: {self.nombre_archivo}")
+        self._guardar_pdf()
 
     def agregar_evento_pagado(self, evento):
         """
@@ -185,6 +181,20 @@ class GeneradorPDF:
         self.pdf.image("logoEven.png", x=10, y=self.pdf.get_y() - 20, w=33)
 
         # Guardar el PDF
-        self.pdf.output(self.nombre_archivo)
-        os.startfile(self.nombre_archivo)
-        print(f"PDF generado y guardado como: {self.nombre_archivo}")
+        self._guardar_pdf()
+
+    def _guardar_pdf(self):
+        # Verificar y crear el directorio si es necesario
+        directorio = os.path.dirname(self.nombre_archivo)
+        if directorio and not os.path.exists(directorio):
+            os.makedirs(directorio)
+
+        # Guardar el PDF
+        self.pdf.output(self.nombre_archivo, "F")
+
+        # Verificar si el archivo se ha guardado correctamente antes de abrirlo
+        if os.path.exists(self.nombre_archivo):
+            os.startfile(self.nombre_archivo)
+            print(f"PDF generado y guardado como: {self.nombre_archivo}")
+        else:
+            print(f"Error: No se pudo guardar el archivo PDF en {self.nombre_archivo}")
