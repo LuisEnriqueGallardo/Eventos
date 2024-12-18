@@ -173,11 +173,7 @@ class VentanaPrincipal(QMainWindow):
         
         aceptar_boton = QPushButton("Aceptar")
         aceptar_boton.setStyleSheet("background-color: #FF7E67; color: white;")
-        aceptar_boton.clicked.connect(lambda: self.db.insertar_evento(anticipo.text() ,precioTotal.text() ,fecha.text(), descripcion.text(), cliente_combo.currentText()[-1], salonCombo.currentIndex(), servicios_combo.currentText()[-1]))
-        aceptar_boton.clicked.connect(lambda: QMessageBox.information(self, "Evento añadido", "Evento añadido"))
-        aceptar_boton.clicked.connect(lambda: self.limpiar_diseño(self.layoutEvento))
-        aceptar_boton.clicked.connect(lambda: self.interfazEventos())
-
+        aceptar_boton.clicked.connect(lambda: self.insertarEvento(anticipo.text() ,precioTotal.text() ,fecha.text(), descripcion.text(), cliente_combo.currentText()[-1], salonCombo.currentIndex(), servicios_combo.currentText()[-1]))
         self.layoutEvento = QVBoxLayout()
         self.layoutEvento.addWidget(cliente_label)
         self.layoutEvento.addWidget(cliente_combo)
@@ -192,6 +188,19 @@ class VentanaPrincipal(QMainWindow):
         self.layoutEvento.addWidget(aceptar_boton)
         
         self.diseño_lateral_derecho.addLayout(self.layoutEvento)
+
+    def insertarEvento(self, fecha, descripcion, cliente, salon, servicios, precioTotal, anticipo):
+        try:
+            if self.db.insertar_evento(anticipo, precioTotal, fecha, descripcion, cliente, salon, servicios):
+                QMessageBox.information(self, "Evento añadido", "Evento añadido")
+                self.limpiar_diseño(self.layoutEvento)
+                self.interfazEventos()
+                return
+            else:
+                QMessageBox.warning(self, "Error", f"Error al insertar el evento, revise los campos")
+        except Exception:
+            QMessageBox.warning(self, "Error", f"Error al insertar el evento, revise los campos")
+            return
 
     def anadirCliente(self):
         # Ventana para añadir un cliente
@@ -475,21 +484,21 @@ class VentanaPrincipal(QMainWindow):
         telefono_servicio = QLineEdit()
         telefono_servicio.setPlaceholderText("Teléfono del servicio")
 
-        layout = QVBoxLayout()
-        layout.addWidget(nombre_servicio)
-        layout.addWidget(descripcion_servicio)
-        layout.addWidget(telefono_servicio)
+        self.layoutSe = QVBoxLayout()
+        self.layoutSe.addWidget(nombre_servicio)
+        self.layoutSe.addWidget(descripcion_servicio)
+        self.layoutSe.addWidget(telefono_servicio)
         boton = QPushButton("Añadir")
         boton.clicked.connect(lambda: self.ingresarServicio(nombre_servicio.text(), descripcion_servicio.text(), telefono_servicio.text()))
-        layout.addWidget(boton)
-        self.QDIalogSe.setLayout(layout)
+        self.layoutSe.addWidget(boton)
+        self.QDIalogSe.setLayout(self.layoutSe)
         self.QDIalogSe.exec()
 
     def ingresarServicio(self, nombre_servicio, descripcion_servicio, telefono_servicio):
         try:
             if self.db.insertar_Servicio(nombre_servicio, descripcion_servicio, telefono_servicio):
                 QMessageBox.information(self, "Servicio añadido", "Servicio añadido")
-                self.limpiar_diseño(self.layoutCl)
+                self.limpiar_diseño(self.layoutSe)
                 self.limpiar_diseño(self.diseño_lateral_derecho)
                 self.limpiar_diseño(self.interfazServiciosEvento())
                 self.QDIalogSe.close()

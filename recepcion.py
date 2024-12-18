@@ -129,7 +129,7 @@ class Recepcion(QWidget):
     
     def imprimirNoPagado(self, evento):
         # Imprime un PDF con la información del evento seleccionado
-        self.pdf = pdf(f"{evento[2]} {evento[3]} {evento[4]}.pdf")
+        self.pdf = pdf()
         self.pdf.generar_evento(evento)
     
     def ventanaPagos(self):
@@ -251,7 +251,7 @@ class Recepcion(QWidget):
 
     def imprimirPagado(self, evento):
         # Imprime un PDF con la información del evento seleccionado
-        self.pdf = pdf(f"{evento[2]} {evento[3]} {evento[4]}.pdf")
+        self.pdf = pdf()
         self.pdf.agregar_evento_pagado(evento)
 
     def limpiar(self):

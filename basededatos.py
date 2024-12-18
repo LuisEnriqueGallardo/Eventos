@@ -31,7 +31,7 @@ class BaseDeDatos:
 
     def autenticar_usuario(self, nombre_usuario, contrasenia):
         try:
-            cons = "SELECT id_usuario, rol FROM usuario WHERE usuario = %s AND contrasenia = %s"
+            cons = "SELECT id_usuario, rol FROM usuario WHERE usuario = %s AND contrasenia = MD5(%s)"
             self.cursor.execute(cons, (nombre_usuario, contrasenia))
             result = self.cursor.fetchone()
             if result:
@@ -87,7 +87,7 @@ class BaseDeDatos:
             id_empleado = self.cursor.lastrowid
 
             # Insertar usuario en la tabla usuario
-            ins = "INSERT INTO usuario (usuario, correo, contrasenia, id_empleado, rol) VALUES (%s, %s, %s, %s, %s)"
+            ins = "INSERT INTO usuario (usuario, correo, MD5(contrasenia), id_empleado, rol) VALUES (%s, %s, %s, %s, %s)"
             self.cursor.execute(ins, (usuario, correo, contrasenia, id_empleado, puestotext))
             self.connection.commit()
 
